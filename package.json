@@ -12,7 +12,6 @@
         "dfx:convert-icp-to-cycles": "dfx cycles convert --ic --amount",
         "task:copy-files": "cp -r custom-domain-files/. dist/",
         "deploy:test": "cd ~/motoko-crafting-table && npm run deploy:frontend1",
-        "deploy:prod": "npm run task:copy-files && dfx deploy gulf_frontend --ic",
-        "deploy:prod-with-custom-domain": "npm run task:copy-files && dfx deploy gulf_frontend --ic"
+        "deploy:prod": "npm run task:copy-files && dfx deploy gulf_frontend --ic"
     }
 }
