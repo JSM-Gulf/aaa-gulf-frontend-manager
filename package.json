@@ -1,0 +1,18 @@
+{
+    "name": "ic-frontend-canister-manager-gulf-frontend",
+    "version": "1.0.0",
+    "description": "",
+    "license": "ISC",
+    "author": "",
+    "scripts": {
+        "build": "echo 'Skipping build step...'",
+        "dfx:icp-wallet-address": "dfx ledger account-id",
+        "dfx:icp-balance": "dfx ledger balance --ic",
+        "dfx:cycles-balance": "dfx cycles balance --ic",
+        "dfx:convert-icp-to-cycles": "dfx cycles convert --ic --amount",
+        "task:copy-files": "cp -r custom-domain-files/. dist/",
+        "deploy:test": "cd ~/motoko-crafting-table && npm run deploy:frontend1",
+        "deploy:prod": "npm run task:copy-files && dfx deploy gulf_frontend --ic",
+        "deploy:prod-with-custom-domain": "npm run task:copy-files && dfx deploy gulf_frontend --ic"
+    }
+}

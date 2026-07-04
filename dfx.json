@@ -1,0 +1,14 @@
+{
+  "canisters": {
+    "gulf_frontend": {
+      "frontend": {
+        "entrypoint": "dist/index.html"
+      },
+      "source": [
+        "dist"
+      ],
+      "type": "assets"
+    }
+  },
+  "version": 1
+}
