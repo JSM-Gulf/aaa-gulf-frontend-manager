@@ -10,8 +10,9 @@
         "dfx:icp-balance": "dfx ledger balance --ic",
         "dfx:cycles-balance": "dfx cycles balance --ic",
         "dfx:convert-icp-to-cycles": "dfx cycles convert --ic --amount",
-        "task:copy-files": "cp -r custom-domain-files/. dist/",
         "deploy:test": "cd ~/motoko-crafting-table && npm run deploy:frontend1",
-        "deploy:prod": "npm run task:copy-files && dfx deploy gulf_frontend --ic"
+        "gulf-enterprise-solutions:task:copy-files": "cp -r gulf-enterprise-solutions-custom-domain-files/. dist-gulf-enterprise-solutions/",
+        "gulf-enterprise-solutions:deploy:prod": "npm run gulf-enterprise-solutions:task:copy-files && dfx deploy gulf_frontend --ic",
+        "gulfbusinesssupport:deploy:prod": "dfx deploy gulfbusinesssupport_frontend --ic"
     }
 }

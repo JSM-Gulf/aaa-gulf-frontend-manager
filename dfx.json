@@ -2,10 +2,19 @@
   "canisters": {
     "gulf_frontend": {
       "frontend": {
-        "entrypoint": "dist/index.html"
+        "entrypoint": "dist-gulf-enterprise-solutions/index.html"
       },
       "source": [
-        "dist"
+        "dist-gulf-enterprise-solutions"
+      ],
+      "type": "assets"
+    },
+    "gulfbusinesssupport_frontend": {
+      "frontend": {
+        "entrypoint": "dist-gulfbusinesssupport/index.html"
+      },
+      "source": [
+        "dist-gulfbusinesssupport"
       ],
       "type": "assets"
     }
