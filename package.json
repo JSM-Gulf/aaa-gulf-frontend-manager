@@ -13,6 +13,7 @@
         "deploy:test": "cd ~/motoko-crafting-table && npm run deploy:frontend1",
         "gulf-enterprise-solutions:task:copy-files": "cp -r gulf-enterprise-solutions-custom-domain-files/. dist-gulf-enterprise-solutions/",
         "gulf-enterprise-solutions:deploy:prod": "npm run gulf-enterprise-solutions:task:copy-files && dfx deploy gulf_frontend --ic",
-        "gulfbusinesssupport:deploy:prod": "dfx deploy gulfbusinesssupport_frontend --ic"
+        "gulfbusinesssupport:task:copy-files": "cp -r gulfbusinesssupport-custom-domain-files/. dist-gulfbusinesssupport/",
+        "gulfbusinesssupport:deploy:prod": "npm run gulfbusinesssupport:task:copy-files && dfx deploy gulfbusinesssupport_frontend --ic"
     }
 }
