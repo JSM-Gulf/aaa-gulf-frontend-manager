@@ -9,7 +9,7 @@
 set -euo pipefail
 
 SLOT="${1:-frontend3}"
-CRAFTING_TABLE="${MOTOKO_CRAFTING_TABLE:-$HOME/motoko-crafting-table}"
+CRAFTING_TABLE="$HOME/motoko-crafting-table"
 MANAGER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$MANAGER_DIR/dist"
 DEST="$CRAFTING_TABLE/$SLOT"
