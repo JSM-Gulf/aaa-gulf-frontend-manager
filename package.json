@@ -12,8 +12,9 @@
         "dfx:convert-icp-to-cycles": "dfx cycles convert --ic --amount",
         "task:copy-to-crafting-table": "scripts/copy-to-crafting-table.sh",
         "deploy:test": "f() { S=${1:-frontend3}; npm run task:copy-to-crafting-table -- $S && cd \"${MOTOKO_CRAFTING_TABLE:-$HOME/motoko-crafting-table}\" && npm run deploy:$S; }; f",
+        "gulf-enterprise-solutions:task:copy-dist": "rm -rf dist-gulf-enterprise-solutions && cp -r dist dist-gulf-enterprise-solutions",
         "gulf-enterprise-solutions:task:copy-files": "cp -r gulf-enterprise-solutions-custom-domain-files/. dist-gulf-enterprise-solutions/",
-        "gulf-enterprise-solutions:deploy:prod": "npm run gulf-enterprise-solutions:task:copy-files && dfx deploy gulf_frontend --ic",
+        "gulf-enterprise-solutions:deploy:prod": "npm run gulf-enterprise-solutions:task:copy-dist && npm run gulf-enterprise-solutions:task:copy-files && dfx deploy gulf_frontend --ic",
         "gulfbusinesssupport:task:copy-dist": "rm -rf dist-gulfbusinesssupport && cp -r dist dist-gulfbusinesssupport",
         "gulfbusinesssupport:task:copy-files": "cp -r gulfbusinesssupport-custom-domain-files/. dist-gulfbusinesssupport/",
         "gulfbusinesssupport:deploy:prod": "npm run gulfbusinesssupport:task:copy-dist && npm run gulfbusinesssupport:task:copy-files && dfx deploy gulfbusinesssupport_frontend --ic"
