@@ -1,86 +1,103 @@
-# IC Frontend Canister Manager
-This project provides a streamlined workflow for deploying frontend assets to the Internet Computer (IC) while ensuring that custom domain configurations and SSL certificates remain valid during the deployment process.
+# aaa-gulf-frontend-manager
 
-## Configuration Guide
+Deploy manager for the Gulf websites: one repo with the production deploy
+config of every Gulf site, plus a one-command test deploy through
+[`motoko-crafting-table`](https://github.com/JSM-Tooling/motoko-crafting-table).
+Built from the
+[`ic-frontend-canister-manager`](https://github.com/JSM-Tooling/ic-frontend-canister-manager)
+template — the general model, the script reference and the custom-domain
+guide (`DOMAIN_SETUP.md`) live there. This file is what is specific to Gulf.
 
-* Clone this project
-* change the folder name by adding suffix with your project name i.e. "my-project-web"
-* Create branch for your web project
-* Follow below instructions:
+The web projects know nothing about canisters. Each one builds, copies its
+`dist` into this repo's `./dist`, and the scripts here route it: to a shared
+crafting-table slot for a test, or to the site's own production canister.
 
-This project requires replacing placeholder values with environment-specific configuration before deployment. Follow the instructions below carefully.
+## Sites
 
----
+| Slug | Web repo | Canister | Canister id | Domains |
+|---|---|---|---|---|
+| `gulf-enterprise-solutions` | [`gulf-enterprise-solutions-hub`](https://github.com/JSM-Gulf/gulf-enterprise-solutions-hub) | `gulf_frontend` | `x3wmq-niaaa-aaaag-axh4q-cai` | `www.gulf-enterprise-solutions.com` |
+| `gulfbusinesssupport` | [`gulfbusinesssupport`](https://github.com/JSM-Gulf/gulfbusinesssupport) | `gulfbusinesssupport_frontend` | `lgydc-kqaaa-aaaag-ay6uq-cai` | `gulfbusinesssupport.com`, `www.gulfbusinesssupport.com` |
 
-## 1a. `package.json` Configuration
+Per site, in this repo: `dist-<slug>/` (production source, git-ignored),
+`<slug>-custom-domain-files/` (`.ic-assets.json5`, `.well-known/ic-domains`),
+one canister in `dfx.json` and `canister_ids.json`, three `<slug>:*` scripts.
 
-Update the following placeholders in the `package.json` file:
+Layout on disk — this repo and the web repos are siblings:
 
-* replace "ic-frontend-canister-manager" with "ic-frontend-canister-manager" + your project name i.e.: ic-frontend-canister-manager-my-project-web
-
-* `<MOTOKO_CRAFTING_TABLE_PATH>`
-  Replace with the absolute or relative path to your Motoko project directory that contains the deployment scripts.
-
-* `<CANISTER_NAME>`
-  Replace with the exact name of the canister you intend to deploy.
-
-### Example
-
-```json
-"deploy:test": "cd ./path-to-your-motoko-project && npm run deploy:frontend1",
-"deploy:prod": "npm run task:copy-files && dfx deploy your_canister_name --ic"
+```
+~/workspace-gulf/
+├── aaa-gulf-frontend-manager/      ← this repo
+├── gulf-enterprise-solutions-hub/
+└── gulfbusinesssupport/
 ```
 
----
+## Everyday commands
 
-## 1b `package.json` Configuration in your web project
+Run in the **web project**:
 
-Add this two scripts in your web project (pay attention to folder hierarchy):
+| Command | Result |
+|---|---|
+| `npm run craft:deploy` | test deploy to crafting-table slot `frontend3` → https://bxvts-pqaaa-aaaas-qgy3a-cai.icp0.io |
+| `npm run craft:deploy -- frontend2` | the same into another slot (`frontend1`/`frontend2` usually hold Sultana builds — check first) |
+| `npm run prod:deploy` | production deploy of that site, custom-domain files included |
 
-```json
-"prod:copy": "rm -rf ../ic-frontend-canister-manager/dist && cp -r dist ../ic-frontend-canister-manager/dist",
-"prod:deploy": "npm run build && npm run prod:copy && cd ../ic-frontend-canister-manager && npm run deploy:prod"
-```
+Both Gulf sites default to `frontend3`, so they overwrite each other there:
+the last test deploy wins. That is fine for a look, not for showing two sites
+at once — use `-- frontend2` for the second one, after checking what it holds
+(`~/motoko-crafting-table/frontend2/index.html`).
 
----
+Run **here**, after the web project's `npm run copy`:
 
-## 2. Domain Configuration (`ic-domains` file)
+| Command | Result |
+|---|---|
+| `npm run deploy:test -- <slot>` | copy `./dist` into `~/motoko-crafting-table/<slot>` and deploy that slot |
+| `npm run gulf-enterprise-solutions:deploy:prod` | production deploy of gulf-enterprise-solutions |
+| `npm run gulfbusinesssupport:deploy:prod` | production deploy of gulfbusinesssupport |
+| `npm run dfx:cycles-balance` | cycles of the current `dfx` identity (a new canister needs some) |
 
-Update the domain placeholder:
+## Adding a Gulf site
 
-* `www.<YOUR-DOMAIN>.com`
-  Replace `<YOUR-DOMAIN>` with your actual domain name.
+Say the new site's slug is `gulf-new`, its canister `gulf_new_frontend`.
 
----
+1. **Web repo** `~/workspace-gulf/gulf-new`, building into `dist/`, with:
 
-## 3. Notes
+   ```json
+   "copy": "rm -rf ../aaa-gulf-frontend-manager/dist && cp -r dist ../aaa-gulf-frontend-manager/dist",
+   "craft:deploy": "f() { S=${1:-frontend3}; npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run deploy:test -- $S; }; f",
+   "prod:deploy": "npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run gulf-new:deploy:prod"
+   ```
 
-* Ensure all placeholders are replaced before running any deployment commands.
-* Incorrect or missing values may result in failed deployments or misconfigured environments.
-* The `deploy:prod` script assumes that required files are present in the `custom-domain-files` directory.
+2. **Here:**
+   * `gulf-new-custom-domain-files/` — copy `gulfbusinesssupport-custom-domain-files/`,
+     put the new domain(s) in `.well-known/ic-domains`;
+   * `dfx.json` — a `gulf_new_frontend` entry with `entrypoint`
+     `dist-gulf-new/index.html` and `source` `["dist-gulf-new"]`;
+   * `package.json`:
 
----
+     ```json
+     "gulf-new:task:copy-dist": "rm -rf dist-gulf-new && cp -r dist dist-gulf-new",
+     "gulf-new:task:copy-files": "cp -r gulf-new-custom-domain-files/. dist-gulf-new/",
+     "gulf-new:deploy:prod": "npm run gulf-new:task:copy-dist && npm run gulf-new:task:copy-files && dfx deploy gulf_new_frontend --ic"
+     ```
 
-## 4. Deployment Commands
+   * `.gitignore` — add `dist-gulf-new`;
+   * commit.
+3. **Test:** `npm run craft:deploy` in the web repo, open the slot URL above.
+4. **Production:** `npm run prod:deploy` in the web repo. The first run
+   creates the canister on mainnet (costs cycles) and adds it to
+   `canister_ids.json` — commit that file.
+5. **Domain:** follow `DOMAIN_SETUP.md` in the template repo with
+   `gulf-new-custom-domain-files/` and the new canister id.
+6. Add the site to the table at the top of this file.
 
-* Test deployment:
-  ```
-  npm run deploy:test
-  ```
+## Scripts in this repo
 
-* Production deployment:
-  ```
-  npm run deploy:prod
-  ```
-
----
-
-## 5. Summary
-
-Before proceeding, verify that:
-
-* All placeholders have been replaced with valid values.
-* Paths are correct and accessible.
-* Domain configuration matches your intended production setup.
-
-Failure to properly configure these values may prevent successful deployment.
+| Script | What it does |
+|---|---|
+| `deploy:test -- <slot>` | `scripts/copy-to-crafting-table.sh <slot>` (replaces `~/motoko-crafting-table/<slot>` with `./dist`; refuses a slot that is not an `assets` canister in the table's `dfx.json`), then `npm run deploy:<slot>` in the table. |
+| `task:copy-to-crafting-table -- <slot>` | the copy step alone. |
+| `<slug>:task:copy-dist` | `./dist` → `dist-<slug>` (old content removed). |
+| `<slug>:task:copy-files` | `<slug>-custom-domain-files/` → `dist-<slug>/`. |
+| `<slug>:deploy:prod` | copy-dist, copy-files, `dfx deploy <canister> --ic`. |
+| `dfx:icp-wallet-address`, `dfx:icp-balance`, `dfx:cycles-balance`, `dfx:convert-icp-to-cycles -- <amount>` | ledger and cycles helpers. |
