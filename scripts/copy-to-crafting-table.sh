@@ -2,19 +2,22 @@
 # Copy the staged build (./dist of this manager) into a frontend slot of
 # the motoko-crafting-table, replacing whatever the slot held before.
 #
-# Usage: scripts/copy-to-crafting-table.sh [slot]     (default: frontend3)
+# Usage: scripts/copy-to-crafting-table.sh <slot>       e.g. frontend3
 #
-# The slot must be an "assets" canister in the crafting table's dfx.json,
-# so a typo can never wipe a backend slot or an unrelated directory.
+# The slot is required — the web project's craft:deploy picks it — and it
+# must be an "assets" canister in the crafting table's dfx.json, so a typo
+# can never wipe a backend slot or an unrelated directory.
 set -euo pipefail
 
-SLOT="${1:-frontend3}"
+fail() { echo "copy-to-crafting-table: $*" >&2; exit 1; }
+
+SLOT="${1:-}"
+[ -n "$SLOT" ] || fail "usage: scripts/copy-to-crafting-table.sh <slot>   (e.g. frontend3)"
+
 CRAFTING_TABLE="$HOME/motoko-crafting-table"
 MANAGER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$MANAGER_DIR/dist"
 DEST="$CRAFTING_TABLE/$SLOT"
-
-fail() { echo "copy-to-crafting-table: $*" >&2; exit 1; }
 
 case "$SLOT" in
     *[!A-Za-z0-9_-]*) fail "bad slot name '$SLOT'" ;;
