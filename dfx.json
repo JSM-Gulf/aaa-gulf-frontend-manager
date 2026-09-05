@@ -17,6 +17,15 @@
         "dist-gulfbusinesssupport"
       ],
       "type": "assets"
+    },
+    "gulfbusinesssupport_frontend2": {
+      "frontend": {
+        "entrypoint": "dist-gulfbusinesssupport/index.html"
+      },
+      "source": [
+        "dist-gulfbusinesssupport"
+      ],
+      "type": "assets"
     }
   },
   "version": 1

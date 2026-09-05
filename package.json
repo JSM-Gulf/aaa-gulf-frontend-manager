@@ -17,6 +17,6 @@
         "gulf-enterprise-solutions:deploy:prod": "npm run gulf-enterprise-solutions:task:copy-dist && npm run gulf-enterprise-solutions:task:copy-files && dfx deploy gulf_frontend --ic",
         "gulfbusinesssupport:task:copy-dist": "rm -rf dist-gulfbusinesssupport && cp -r dist dist-gulfbusinesssupport",
         "gulfbusinesssupport:task:copy-files": "cp -r gulfbusinesssupport-custom-domain-files/. dist-gulfbusinesssupport/",
-        "gulfbusinesssupport:deploy:prod": "npm run gulfbusinesssupport:task:copy-dist && npm run gulfbusinesssupport:task:copy-files && dfx deploy gulfbusinesssupport_frontend --ic"
+        "gulfbusinesssupport:deploy:prod": "npm run gulfbusinesssupport:task:copy-dist && npm run gulfbusinesssupport:task:copy-files && dfx deploy gulfbusinesssupport_frontend2 --ic"
     }
 }
