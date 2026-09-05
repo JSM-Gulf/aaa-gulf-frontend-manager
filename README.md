@@ -17,11 +17,39 @@ crafting-table slot for a test, or to the site's own production canister.
 | Slug | Web repo | Canister | Canister id | Domains |
 |---|---|---|---|---|
 | `gulf-enterprise-solutions` | [`gulf-enterprise-solutions-hub`](https://github.com/JSM-Gulf/gulf-enterprise-solutions-hub) | `gulf_frontend` | `x3wmq-niaaa-aaaag-axh4q-cai` | `www.gulf-enterprise-solutions.com` |
-| `gulfbusinesssupport` | [`gulfbusinesssupport`](https://github.com/JSM-Gulf/gulfbusinesssupport) | `gulfbusinesssupport_frontend` | `lgydc-kqaaa-aaaag-ay6uq-cai` | `gulfbusinesssupport.com`, `www.gulfbusinesssupport.com` |
+| `gulfbusinesssupport` | [`gulfbusinesssupport`](https://github.com/JSM-Gulf/gulfbusinesssupport) | `gulfbusinesssupport_frontend2` | `3lw4e-riaaa-aaaag-azafa-cai` | `gulfbusinesssupport.com` (TXT moved here 2026-09-05, registration pending) — see [Domain](#gulfbusinesssupport-domain) |
+| `gulfbusinesssupport` (old Dubai site) | same repo, `master` before the Erbil redesign | `gulfbusinesssupport_frontend` | `lgydc-kqaaa-aaaag-ay6uq-cai` | `www.gulfbusinesssupport.com` — still serves the old site |
 
 Per site, in this repo: `dist-<slug>/` (production source, git-ignored),
 `<slug>-custom-domain-files/` (`.ic-assets.json5`, `.well-known/ic-domains`),
 one canister in `dfx.json` and `canister_ids.json`, three `<slug>:*` scripts.
+`gulfbusinesssupport` is the exception with two canisters, explained next.
+
+### Why gulfbusinesssupport has two canisters
+
+`gulfbusinesssupport_frontend` (`lgydc-…`, the original Dubai site) has a
+single controller, `feau5-…` — the dfx identity that lives on the machine
+in Kochcice. The identity used here (`DevTest`, `i5tik-…`) is not a
+controller, so from this machine nothing can be deployed to `lgydc-…`.
+Rather than wait for access, the Erbil redesign (2026-09-05) went to a
+second canister, `gulfbusinesssupport_frontend2` (`3lw4e-…`), created from
+the DevTest cycles ledger with both `i5tik-…` and `feau5-…` as controllers.
+`npm run gulfbusinesssupport:deploy:prod` targets `frontend2`; `lgydc-…`
+keeps serving `www.gulfbusinesssupport.com` until the domain is moved.
+
+**This is temporary.** The plan is to recycle one of the two canisters and
+return to a single one — either add `i5tik-…` as a controller of `lgydc-…`
+from Kochcice and deploy there, or move both hostnames to `3lw4e-…`. Either
+way the unused canister gets deleted (`dfx canister delete … --ic` refunds
+its remaining cycles to the caller; the 0.5 TC creation fee is gone).
+
+Creating a canister when the cycles wallet is empty: do not let
+`dfx deploy` create it (it goes through the wallet and fails with
+"out of cycles"); create it from the cycles ledger first —
+`dfx canister create <canister> --ic --no-wallet --with-cycles 600000000000
+--next-to <existing canister id>` — then top it up
+(`dfx cycles top-up <canister> 400000000000 --ic`): the network burns
+0.5 TC of the deposit as the creation fee, so 0.6 TC leaves ~0.1 TC.
 
 Layout on disk — this repo and the web repos are siblings:
 
@@ -40,7 +68,7 @@ Run in the **web project**:
 |---|---|
 | `npm run craft:deploy` | test deploy to crafting-table slot `frontend3` → https://bxvts-pqaaa-aaaas-qgy3a-cai.icp0.io |
 | `npm run craft:deploy -- frontend2` | the same into another slot (`frontend1`/`frontend2` usually hold Sultana builds — check first) |
-| `npm run prod:deploy` | production deploy of that site, custom-domain files included |
+| `npm run prod:deploy` | production deploy of that site, custom-domain files included (for gulfbusinesssupport: to `gulfbusinesssupport_frontend2`) |
 
 Both Gulf sites default to `frontend3`, so they overwrite each other there:
 the last test deploy wins. That is fine for a look, not for showing two sites
@@ -53,8 +81,65 @@ Run **here**, after the web project's `npm run copy`:
 |---|---|
 | `npm run deploy:test -- <slot>` | copy `./dist` into `~/motoko-crafting-table/<slot>` and deploy that slot |
 | `npm run gulf-enterprise-solutions:deploy:prod` | production deploy of gulf-enterprise-solutions |
-| `npm run gulfbusinesssupport:deploy:prod` | production deploy of gulfbusinesssupport |
+| `npm run gulfbusinesssupport:deploy:prod` | production deploy of gulfbusinesssupport to `gulfbusinesssupport_frontend2` (`3lw4e-…`) |
 | `npm run dfx:cycles-balance` | cycles of the current `dfx` identity (a new canister needs some) |
+
+## gulfbusinesssupport domain
+
+- **Registrar:** GoDaddy — the domain `gulfbusinesssupport.com` was bought
+  by Yasameen. GoDaddy only holds the registration; its nameservers were
+  switched to Cloudflare on 2026-08-17 (the apex needs CNAME flattening,
+  which GoDaddy does not do).
+- **DNS:** Cloudflare, account `michal.s.limeacademy@gmail.com`,
+  nameservers `clark.ns.cloudflare.com` and `jewel.ns.cloudflare.com`.
+  Every record is **DNS only** (grey cloud — the IC boundary nodes must
+  see the real hostname), TTL Auto.
+- **Canister side:** `gulfbusinesssupport-custom-domain-files/.well-known/ic-domains`
+  lists both hostnames; `<slug>:deploy:prod` copies it into the deployed
+  site, so both canisters carry it.
+
+DNS records (state of 2026-09-05):
+
+| Type | Name | Content | Role |
+|---|---|---|---|
+| CNAME | `gulfbusinesssupport.com` (apex, flattened by Cloudflare) | `gulfbusinesssupport.com.icp1.io` | traffic for the apex goes to the IC boundary nodes |
+| CNAME | `www` | `www.gulfbusinesssupport.com.icp1.io` | the same for `www` |
+| CNAME | `_acme-challenge` | `_acme-challenge.gulfbusinesssupport.com.icp2.io` | lets the IC obtain the TLS certificate for the apex |
+| CNAME | `_acme-challenge.www` | `_acme-challenge.www.gulfbusinesssupport.com.icp2.io` | the same for `www` |
+| TXT | `_canister-id` | `3lw4e-riaaa-aaaag-azafa-cai` | which canister serves the apex (was `lgydc-…` until 2026-09-05) |
+| TXT | `_canister-id.www` | `lgydc-kqaaa-aaaag-ay6uq-cai` | which canister serves `www` (old site) |
+| TXT | `_dmarc` | `v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;` | mail policy left over from GoDaddy; no mail is set up for the domain |
+
+Registration status with the IC (`https://icp0.io/custom-domains/v1/<hostname>`):
+
+- `www.gulfbusinesssupport.com` — registered 2026-08-17, certificate OK,
+  serves `lgydc-…` (the old site).
+- `gulfbusinesssupport.com` — registration **failed on the IC side**
+  (2026-08-17/18): an orphaned ACME challenge TXT at
+  `_acme-challenge.gulfbusinesssupport.com.icp2.io` makes every new `POST`
+  answer "existing DNS TXT challenge record", although `/validate` passes.
+  Two full clean-up cycles did not clear it; the apex still answers
+  "Unknown Domain". The TXT now names `3lw4e-…`; retry the registration
+  and, if it fails the same way, raise it on the DFINITY forum.
+
+Moving a hostname to another canister (what the switch of `www` to
+`3lw4e-…` will take; the API calls are run by hand, `curl -X …`):
+
+1. Make sure the target canister's deployed site contains the hostname in
+   `.well-known/ic-domains` (both Gulf canisters do).
+2. Cloudflare: delete the `_canister-id.<host>` TXT, wait ~5 min (TTL).
+3. `DELETE https://icp0.io/custom-domains/v1/<host>` — refused while the
+   TXT still exists, that is why step 2 comes first.
+4. Cloudflare: add `_canister-id.<host>` TXT with the new canister id,
+   wait ~5 min.
+5. `POST https://icp0.io/custom-domains/v1/<host>`; then poll
+   `GET https://icp0.io/custom-domains/v1/<host>` until `registered`
+   (certificate issuance takes minutes); `GET …/<host>/validate` checks
+   the DNS side only.
+
+The old `POST https://icp0.io/registrations` API is retired
+(`canister_id_not_resolved`); `custom-domains/v1` keys everything by the
+hostname, there is no registration id.
 
 ## Adding a Gulf site
 
@@ -85,8 +170,9 @@ Say the new site's slug is `gulf-new`, its canister `gulf_new_frontend`.
    * commit.
 3. **Test:** `npm run craft:deploy` in the web repo, open the slot URL above.
 4. **Production:** `npm run prod:deploy` in the web repo. The first run
-   creates the canister on mainnet (costs cycles) and adds it to
-   `canister_ids.json` — commit that file.
+   creates the canister on mainnet (costs cycles, through the identity's
+   cycles wallet — with an empty wallet create it from the cycles ledger
+   first, see above) and adds it to `canister_ids.json` — commit that file.
 5. **Domain:** follow `DOMAIN_SETUP.md` in the template repo with
    `gulf-new-custom-domain-files/` and the new canister id.
 6. Add the site to the table at the top of this file.
