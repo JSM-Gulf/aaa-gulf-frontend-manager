@@ -17,8 +17,8 @@ crafting-table slot for a test, or to the site's own production canister.
 | Slug | Web repo | Canister | Canister id | Domains |
 |---|---|---|---|---|
 | `gulf-enterprise-solutions` | [`gulf-enterprise-solutions-hub`](https://github.com/JSM-Gulf/gulf-enterprise-solutions-hub) | `gulf_frontend` | `x3wmq-niaaa-aaaag-axh4q-cai` | `www.gulf-enterprise-solutions.com` |
-| `gulfbusinesssupport` | [`gulfbusinesssupport`](https://github.com/JSM-Gulf/gulfbusinesssupport) | `gulfbusinesssupport_frontend2` | `3lw4e-riaaa-aaaag-azafa-cai` | `gulfbusinesssupport.com` (TXT moved here 2026-09-05, registration pending) — see [Domain](#gulfbusinesssupport-domain) |
-| `gulfbusinesssupport` (old Dubai site) | same repo, `master` before the Erbil redesign | `gulfbusinesssupport_frontend` | `lgydc-kqaaa-aaaag-ay6uq-cai` | `www.gulfbusinesssupport.com` — still serves the old site |
+| `gulfbusinesssupport` | [`gulfbusinesssupport`](https://github.com/JSM-Gulf/gulfbusinesssupport) | `gulfbusinesssupport_frontend2` | `3lw4e-riaaa-aaaag-azafa-cai` | `www.gulfbusinesssupport.com` (since 2026-09-05), `gulfbusinesssupport.com` (since 2026-09-05) — see [Domain](#gulfbusinesssupport-domain) |
+| `gulfbusinesssupport` (old Dubai site) | same repo, `master` before the Erbil redesign | `gulfbusinesssupport_frontend` | `lgydc-kqaaa-aaaag-ay6uq-cai` | none any more — idle, to be recycled |
 
 Per site, in this repo: `dist-<slug>/` (production source, git-ignored),
 `<slug>-custom-domain-files/` (`.ic-assets.json5`, `.well-known/ic-domains`),
@@ -34,8 +34,9 @@ controller, so from this machine nothing can be deployed to `lgydc-…`.
 Rather than wait for access, the Erbil redesign (2026-09-05) went to a
 second canister, `gulfbusinesssupport_frontend2` (`3lw4e-…`), created from
 the DevTest cycles ledger with both `i5tik-…` and `feau5-…` as controllers.
-`npm run gulfbusinesssupport:deploy:prod` targets `frontend2`; `lgydc-…`
-keeps serving `www.gulfbusinesssupport.com` until the domain is moved.
+`npm run gulfbusinesssupport:deploy:prod` targets `frontend2`; both
+hostnames were repointed to it on 2026-09-05, so `lgydc-…` now serves
+nothing and only waits to be recycled.
 
 **This is temporary.** The plan is to recycle one of the two canisters and
 return to a single one — either add `i5tik-…` as a controller of `lgydc-…`
@@ -107,39 +108,41 @@ DNS records (state of 2026-09-05):
 | CNAME | `_acme-challenge` | `_acme-challenge.gulfbusinesssupport.com.icp2.io` | lets the IC obtain the TLS certificate for the apex |
 | CNAME | `_acme-challenge.www` | `_acme-challenge.www.gulfbusinesssupport.com.icp2.io` | the same for `www` |
 | TXT | `_canister-id` | `3lw4e-riaaa-aaaag-azafa-cai` | which canister serves the apex (was `lgydc-…` until 2026-09-05) |
-| TXT | `_canister-id.www` | `lgydc-kqaaa-aaaag-ay6uq-cai` | which canister serves `www` (old site) |
+| TXT | `_canister-id.www` | `3lw4e-riaaa-aaaag-azafa-cai` | which canister serves `www` (was `lgydc-…` until 2026-09-05) |
 | TXT | `_dmarc` | `v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;` | mail policy left over from GoDaddy; no mail is set up for the domain |
 
 Registration status with the IC (`https://icp0.io/custom-domains/v1/<hostname>`):
 
-- `www.gulfbusinesssupport.com` — registered 2026-08-17, certificate OK,
-  serves `lgydc-…` (the old site).
-- `gulfbusinesssupport.com` — registration **failed on the IC side**
-  (2026-08-17/18): an orphaned ACME challenge TXT at
-  `_acme-challenge.gulfbusinesssupport.com.icp2.io` makes every new `POST`
-  answer "existing DNS TXT challenge record", although `/validate` passes.
-  Two full clean-up cycles did not clear it; the apex still answers
-  "Unknown Domain". The TXT now names `3lw4e-…`; retry the registration
-  and, if it fails the same way, raise it on the DFINITY forum.
+- `www.gulfbusinesssupport.com` — registered 2026-08-17 on `lgydc-…`,
+  repointed to `3lw4e-…` on 2026-09-05 with one `PATCH` (accepted at
+  once, live after ~10 minutes, no downtime, same certificate).
+- `gulfbusinesssupport.com` — the first registration (2026-08-17/18)
+  **failed on the IC side**: an orphaned ACME challenge TXT at
+  `_acme-challenge.gulfbusinesssupport.com.icp2.io` made every `POST`
+  answer "existing DNS TXT challenge record" although `/validate` passed,
+  and two clean-up cycles did not clear it. On 2026-09-05, with the TXT
+  naming `3lw4e-…`, a fresh `POST` was accepted without that error and the
+  apex was `registered` three minutes later (certificate valid to
+  2026-12-04; the IC renews it). Both hostnames now serve `3lw4e-…`.
 
-Moving a hostname to another canister (what the switch of `www` to
-`3lw4e-…` will take; the API calls are run by hand, `curl -X …`):
+The API (`https://icp.net/custom-domains/v1/<hostname>`; `icp0.io` answers
+too) is keyed by the hostname, there is no registration id, and the write
+calls are run by hand (`curl -sL -X … "<url>"`, no body):
 
-1. Make sure the target canister's deployed site contains the hostname in
-   `.well-known/ic-domains` (both Gulf canisters do).
-2. Cloudflare: delete the `_canister-id.<host>` TXT, wait ~5 min (TTL).
-3. `DELETE https://icp0.io/custom-domains/v1/<host>` — refused while the
-   TXT still exists, that is why step 2 comes first.
-4. Cloudflare: add `_canister-id.<host>` TXT with the new canister id,
-   wait ~5 min.
-5. `POST https://icp0.io/custom-domains/v1/<host>`; then poll
-   `GET https://icp0.io/custom-domains/v1/<host>` until `registered`
-   (certificate issuance takes minutes); `GET …/<host>/validate` checks
-   the DNS side only.
+| Call | When |
+|---|---|
+| `GET …/<host>/validate` | checks the DNS records and `.well-known/ic-domains` only |
+| `POST …/<host>` | first registration of a hostname (status `not_found`) |
+| `GET …/<host>` | status: `registering` → `registered` (certificate takes minutes), `failed`, `not_found` |
+| `PATCH …/<host>` | **repoint** a registered hostname to the canister now in its `_canister-id` TXT — change the TXT first, wait ~5 min, then PATCH |
+| `DELETE …/<host>` | remove the registration; refused while the `_canister-id` TXT still exists, so delete the TXT first, wait ~5 min |
 
-The old `POST https://icp0.io/registrations` API is retired
-(`canister_id_not_resolved`); `custom-domains/v1` keys everything by the
-hostname, there is no registration id.
+Moving a hostname to another canister is therefore: the target canister's
+deployed site lists the hostname in `.well-known/ic-domains` (both Gulf
+canisters do) → change the `_canister-id.<host>` TXT in Cloudflare → wait
+~5 min → `PATCH`. `DELETE` + `POST` is only the fallback for a registration
+that is `failed`. The old `POST https://icp0.io/registrations` API is
+retired (`canister_id_not_resolved`).
 
 ## Adding a Gulf site
 
