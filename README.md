@@ -67,14 +67,15 @@ Run in the **web project**:
 
 | Command | Result |
 |---|---|
-| `npm run craft:deploy` | test deploy to crafting-table slot `frontend3` → https://bxvts-pqaaa-aaaas-qgy3a-cai.icp0.io |
-| `npm run craft:deploy -- frontend2` | the same into another slot (`frontend1`/`frontend2` usually hold Sultana builds — check first) |
+| `npm run craft:deploy -- <slot>` | test deploy to a crafting-table slot — the slot is required, see below |
 | `npm run prod:deploy` | production deploy of that site, custom-domain files included (for gulfbusinesssupport: to `gulfbusinesssupport_frontend2`) |
 
-Both Gulf sites default to `frontend3`, so they overwrite each other there:
-the last test deploy wins. That is fine for a look, not for showing two sites
-at once — use `-- frontend2` for the second one, after checking what it holds
-(`~/motoko-crafting-table/frontend2/index.html`).
+Gulf has **no test slot** since 2026-09-11. `frontend1`–`frontend4` belong to
+Sultana's STAGE and DEV environments — `frontend3`, the old Gulf default, is now
+the Sultana DEV consumer app. `craft:deploy` therefore has no default slot and
+stops when none is given. For a test deploy, create a free slot first (for
+example `frontend5` in `~/motoko-crafting-table`; a new canister burns a 0.5 TC
+create fee) or deploy to production.
 
 Run **here**, after the web project's `npm run copy`:
 
@@ -152,7 +153,7 @@ Say the new site's slug is `gulf-new`, its canister `gulf_new_frontend`.
 
    ```json
    "copy": "rm -rf ../aaa-gulf-frontend-manager/dist && cp -r dist ../aaa-gulf-frontend-manager/dist",
-   "craft:deploy": "f() { S=${1:-frontend3}; npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run deploy:test -- $S; }; f",
+   "craft:deploy": "f() { S=${1:?pass a crafting-table slot}; npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run deploy:test -- $S; }; f",
    "prod:deploy": "npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run gulf-new:deploy:prod"
    ```
 
