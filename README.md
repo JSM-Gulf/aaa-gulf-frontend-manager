@@ -29,17 +29,17 @@ one canister in `dfx.json` and `canister_ids.json`, three `<slug>:*` scripts.
 
 `gulfbusinesssupport_frontend` (`lgydc-…`, the original Dubai site) has a
 single controller, `feau5-…` — the dfx identity that lives on the machine
-in Kochcice. The identity used here (`DevTest`, `i5tik-…`) is not a
-controller, so from this machine nothing can be deployed to `lgydc-…`.
+in Kochcice. The identity used here (`jsm-controller`, `qyyk4-…`; `DevTest`
+`i5tik-…` until its rotation on 2026-09-19) is not a controller, so from this machine nothing can be deployed to `lgydc-…`.
 Rather than wait for access, the Erbil redesign (2026-09-05) went to a
 second canister, `gulfbusinesssupport_frontend2` (`3lw4e-…`), created from
-the DevTest cycles ledger with both `i5tik-…` and `feau5-…` as controllers.
+the DevTest cycles ledger; its controllers are now `jsm-controller` and `feau5-…`.
 `npm run gulfbusinesssupport:deploy:prod` targets `frontend2`; both
 hostnames were repointed to it on 2026-09-05, so `lgydc-…` now serves
 nothing and only waits to be recycled.
 
 **This is temporary.** The plan is to recycle one of the two canisters and
-return to a single one — either add `i5tik-…` as a controller of `lgydc-…`
+return to a single one — either add `jsm-controller` `qyyk4-…` as a controller of `lgydc-…`
 from Kochcice and deploy there, or move both hostnames to `3lw4e-…`. Either
 way the unused canister gets deleted (`dfx canister delete … --ic` refunds
 its remaining cycles to the caller; the 0.5 TC creation fee is gone).
