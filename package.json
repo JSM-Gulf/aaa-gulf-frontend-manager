@@ -4,6 +4,9 @@
     "description": "",
     "license": "ISC",
     "author": "",
+    "config": {
+        "craftProject": "gulf"
+    },
     "scripts": {
         "build": "echo 'Skipping build step...'",
         "dfx:icp-wallet-address": "dfx ledger account-id",
@@ -11,7 +14,7 @@
         "dfx:cycles-balance": "dfx cycles balance --ic",
         "dfx:convert-icp-to-cycles": "dfx cycles convert --ic --amount",
         "task:copy-to-crafting-table": "scripts/copy-to-crafting-table.sh",
-        "deploy:test": "f() { npm run task:copy-to-crafting-table -- $1 && cd ~/motoko-crafting-table && npm run deploy:$1; }; f",
+        "deploy:test": "f() { U='usage: deploy:test -- <slot> <repo> <commit>'; S=${1:?$U}; R=${2:?$U}; C=${3:?$U}; P=${npm_package_config_craftProject:?set config.craftProject in package.json}; npm run task:copy-to-crafting-table -- $S && cd ~/motoko-crafting-table && npm run deploy:$S -- --project $P --repo $R --commit $C; }; f",
         "gulf-enterprise-solutions:task:copy-dist": "rm -rf dist-gulf-enterprise-solutions && cp -r dist dist-gulf-enterprise-solutions",
         "gulf-enterprise-solutions:task:copy-files": "cp -r gulf-enterprise-solutions-custom-domain-files/. dist-gulf-enterprise-solutions/",
         "gulf-enterprise-solutions:deploy:prod": "npm run gulf-enterprise-solutions:task:copy-dist && npm run gulf-enterprise-solutions:task:copy-files && dfx deploy gulf_frontend --ic",

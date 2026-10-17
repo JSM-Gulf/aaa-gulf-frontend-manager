@@ -73,15 +73,17 @@ Run in the **web project**:
 Gulf has **no test slot** since 2026-09-11. `frontend1`–`frontend4` belong to
 Sultana's STAGE and DEV environments — `frontend3`, the old Gulf default, is now
 the Sultana DEV consumer app. `craft:deploy` therefore has no default slot and
-stops when none is given. For a test deploy, create a free slot first (for
-example `frontend5` in `~/motoko-crafting-table`; a new canister burns a 0.5 TC
-create fee) or deploy to production.
+stops when none is given. Since 2026-10-17 the crafting table's
+`crafting-manager` decides who deploys into a slot: a test deploy goes only to
+a slot assigned there to the product **`gulf`** (`config.craftProject` in this
+`package.json`) — assign a free slot on the manager's page first, or deploy to
+production.
 
 Run **here**, after the web project's `npm run copy`:
 
 | Command | Result |
 |---|---|
-| `npm run deploy:test -- <slot>` | copy `./dist` into `~/motoko-crafting-table/<slot>` and deploy that slot |
+| `npm run deploy:test -- <slot> <repo> <commit>` | copy `./dist` into `~/motoko-crafting-table/<slot>` and deploy that slot as the product `gulf`, recording the site's repo and commit |
 | `npm run gulf-enterprise-solutions:deploy:prod` | production deploy of gulf-enterprise-solutions |
 | `npm run gulfbusinesssupport:deploy:prod` | production deploy of gulfbusinesssupport to `gulfbusinesssupport_frontend2` (`3lw4e-…`) |
 | `npm run dfx:cycles-balance` | cycles of the current `dfx` identity (a new canister needs some) |
@@ -153,7 +155,7 @@ Say the new site's slug is `gulf-new`, its canister `gulf_new_frontend`.
 
    ```json
    "copy": "rm -rf ../aaa-gulf-frontend-manager/dist && cp -r dist ../aaa-gulf-frontend-manager/dist",
-   "craft:deploy": "f() { S=${1:?pass a crafting-table slot}; npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run deploy:test -- $S; }; f",
+   "craft:deploy": "f() { S=${1:?pass a crafting-table slot}; C=$(git rev-parse --short HEAD)$(test -z \"$(git status --porcelain)\" || echo -dirty); npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run deploy:test -- $S gulf-new $C; }; f",
    "prod:deploy": "npm run build && npm run copy && cd ../aaa-gulf-frontend-manager && npm run gulf-new:deploy:prod"
    ```
 
@@ -172,7 +174,7 @@ Say the new site's slug is `gulf-new`, its canister `gulf_new_frontend`.
 
    * `.gitignore` — add `dist-gulf-new`;
    * commit.
-3. **Test:** `npm run craft:deploy` in the web repo, open the slot URL above.
+3. **Test:** `npm run craft:deploy -- <slot>` in the web repo (a slot assigned to `gulf` in the crafting manager), open the slot's URL.
 4. **Production:** `npm run prod:deploy` in the web repo. The first run
    creates the canister on mainnet (costs cycles, through the identity's
    cycles wallet — with an empty wallet create it from the cycles ledger
@@ -185,7 +187,7 @@ Say the new site's slug is `gulf-new`, its canister `gulf_new_frontend`.
 
 | Script | What it does |
 |---|---|
-| `deploy:test -- <slot>` | `scripts/copy-to-crafting-table.sh <slot>` (replaces `~/motoko-crafting-table/<slot>` with `./dist`; refuses a slot that is not an `assets` canister in the table's `dfx.json`), then `npm run deploy:<slot>` in the table. |
+| `deploy:test -- <slot> <repo> <commit>` | `scripts/copy-to-crafting-table.sh <slot>` (replaces `~/motoko-crafting-table/<slot>` with `./dist`; refuses a slot that is not an `assets` canister in the table's `dfx.json`), then `npm run deploy:<slot> -- --project gulf --repo <repo> --commit <commit>` in the table (it checks in crafting-manager that the slot is assigned to `gulf`, deploys, records the deploy). All three arguments are required; the product comes from `config.craftProject`. |
 | `task:copy-to-crafting-table -- <slot>` | the copy step alone. |
 | `<slug>:task:copy-dist` | `./dist` → `dist-<slug>` (old content removed). |
 | `<slug>:task:copy-files` | `<slug>-custom-domain-files/` → `dist-<slug>/`. |
